@@ -1,5 +1,5 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 import requests
 
@@ -29,7 +29,7 @@ default_args = {
 dag = DAG('fetch_pro_matches_dag',
           default_args=default_args,
           description='A simple DAG to fetch pro matches from OpenDota',
-          schedule_interval=timedelta(days=1),
+          schedule=timedelta(days=1),
           )
 
 t1 = PythonOperator(
