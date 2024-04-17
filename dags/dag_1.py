@@ -13,6 +13,7 @@ def fetch_pro_matches():
         print(f"Fetched {len(matches)} matches.")
     else:
         print("Failed to fetch matches")
+    return matches
 
 
 default_args = {
