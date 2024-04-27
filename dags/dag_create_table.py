@@ -9,32 +9,32 @@ import pendulum
     schedule="@once",
     catchup=False,
 )
-def create_table_heroes():
+def create_table():
     create_table_heroes: PostgresOperator = PostgresOperator(
         task_id="create_table_heroes",
         postgres_conn_id="stat_dota2",
-        sql="sql/create_table_heroes.sql",
+        sql="sql/create_table/create_table_heroes.sql",
     )
 
     create_table_pro_teams = PostgresOperator(
         task_id="create_table_pro_teams",
         postgres_conn_id="stat_dota2",
-        sql="sql/create_table_pro_teams.sql",
+        sql="sql/create_table/create_table_pro_teams.sql",
     )
 
     create_table_pro_players = PostgresOperator(
         task_id="create_table_pro_players",
         postgres_conn_id="stat_dota2",
-        sql="sql/create_table_pro_players.sql",
+        sql="sql/create_table/create_table_pro_players.sql",
     )
 
     create_table_pro_matches = PostgresOperator(
         task_id="create_table_pro_matches",
         postgres_conn_id="stat_dota2",
-        sql="sql/create_table_pro_matches.sql",
+        sql="sql/create_table/create_table_pro_matches.sql",
     )
 
     create_table_heroes >> create_table_pro_teams >> create_table_pro_players >> create_table_pro_matches
 
 
-dag = create_table_heroes()
+dag = create_table()
