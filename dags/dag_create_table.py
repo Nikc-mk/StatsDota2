@@ -1,5 +1,5 @@
 from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.decorators import dag, task
+from airflow.decorators import dag
 import pendulum
 
 

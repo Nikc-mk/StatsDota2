@@ -73,7 +73,7 @@ def dag_download_upload_heroes():
         cur_pg_hook.execute(query)
         count = cur_pg_hook.fetchone()[0]
         if count == len(heroes):
-            print(f"All heroes are already in the database.")
+            print("All heroes are already in the database.")
             heroes = False
         else:
             print(f"There are {len(heroes) - count} heroes to be uploaded.")
