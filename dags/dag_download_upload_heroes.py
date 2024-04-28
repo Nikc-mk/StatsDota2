@@ -4,7 +4,7 @@ import pendulum
 import requests
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-
+from airflow.providers.http.hooks.http import HttpHook
 
 # import pydantic
 
@@ -47,10 +47,10 @@ def dag_download_upload_heroes():
         Эта функция выполняет HTTP-запрос к OpenDota и возвращает данные о героях в формате JSON.
         :return:
         """
-        response = requests.get("https://api.opendota.com/api/heroes")
+        hook = HttpHook(method='GET', http_conn_id='opendota')
+        response = hook.run(endpoint="/api/heroes")
         heroes = response.json()
-        if response.status_code == 200:
-            print(f"Fetched {len(heroes)} heroes.")
+        print(f"Fetched {len(heroes)} heroes.")
 
         return heroes
 
