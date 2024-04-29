@@ -1,7 +1,6 @@
 # from typing import List
 
 import pendulum
-import requests
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.http.hooks.http import HttpHook
