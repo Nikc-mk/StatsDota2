@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS pro_matches (
     league_name VARCHAR NOT NULL,
     radiant_score INTEGER DEFAULT 0,
     dire_score INTEGER DEFAULT 0,
-    radiant_win BOOLEAN NOT NULL,
-    CONSTRAINT fk_radiant_ FOREIGN KEY (radiant_team_id) REFERENCES pro_teams(team_id),
-    CONSTRAINT fk_dire_ FOREIGN KEY (dire_team_id) REFERENCES pro_teams(team_id));
+    radiant_win BOOLEAN NOT NULL)
+--    , CONSTRAINT fk_radiant_ FOREIGN KEY (radiant_team_id) REFERENCES pro_teams(team_id),
+--    CONSTRAINT fk_dire_ FOREIGN KEY (dire_team_id) REFERENCES pro_teams(team_id))
+    ;
