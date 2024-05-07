@@ -32,15 +32,15 @@ def create_table():
     )
 
     create_table_pro_players = PostgresOperator(
-        task_id="create_table_pro_players",
+        task_id="create_table_player_matches",
         postgres_conn_id="stat_dota2",
-        sql="sql/create_table/create_table_pro_players.sql",
+        sql="sql/create_table/create_table_player_matches.sql",
     )
 
     create_table_pro_matches = PostgresOperator(
-        task_id="create_table_pro_matches",
+        task_id="create_table_matches",
         postgres_conn_id="stat_dota2",
-        sql="sql/create_table/create_table_pro_matches.sql",
+        sql="sql/create_table/create_table_matches.sql",
     )
 
     create_table_heroes >> create_table_pro_teams >> create_table_pro_players >> create_table_pro_matches
