@@ -40,8 +40,7 @@ def dag_download_upload_pro_matches():
         """
         data_pro_matches = list()
         pg_hook = PostgresHook(postgres_conn_id="postgres")
-
-        for pro_match in pro_matches[:10]:
+        for pro_match in pro_matches:
             con_pg_hook = pg_hook.get_conn()
             cur_pg_hook = con_pg_hook.cursor()
             query = f"""
@@ -218,8 +217,9 @@ def dag_download_upload_pro_matches():
     lst_new_pro_matches = api_get_pro_matches()
     full_data_pro_matches = download_pro_matches_data(lst_new_pro_matches)
     upload_pro_teams(full_data_pro_matches)
-    upload_pro_matches(full_data_pro_matches)
-    upload_player_matches(full_data_pro_matches)
+    # загрузку player_matches делаем после загрузки pro_matches, чтобы не получилось ситуации,
+    # когда пытается загрузить игрока в матче, а матч еще не загружен
+    upload_pro_matches(full_data_pro_matches) >> upload_player_matches(full_data_pro_matches)
 
 
 dag_download_upload_pro_matches()
