@@ -169,9 +169,9 @@ def dag_download_upload_pro_matches():
                                                        "creeps_stacked", "camps_stacked",
                                                        "lane", "is_roaming", "roshans_killed", "observers_placed",
                                                        "dn_t", "item_neutral", "net_worth"])
+                    print(f"ИНФОРМАЦИЯ О ИГРОКЕ СЛОТ №{i} В МАТЧЕ {pro_match["match_id"]} ЗАПИСАНА!")
                 except Exception as ex:
                     print(ex)
-                print(f"ИНФОРМАЦИЯ О ИГРОКЕ СЛОТ №{i} В МАТЧЕ {pro_match["match_id"]} ЗАПИСАНА!")
 
     lst_new_pro_matches = api_get_pro_matches()
     full_data_pro_matches = download_pro_matches_data(lst_new_pro_matches)

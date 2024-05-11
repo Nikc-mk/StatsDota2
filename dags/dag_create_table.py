@@ -20,6 +20,13 @@ def create_table():
     Параметр schedule указывает, что диаграмма должна быть выполнена один раз, на указанную дату start_date.
     Параметр catchup установлен на False, чтобы предотвратить выполнение диаграммы за пределами расписания.
     """
+
+    create_table_items: PostgresOperator = PostgresOperator(
+        task_id="create_table_items",
+        postgres_conn_id="postgres",
+        sql="sql/create_table/create_table_items.sql",
+    )
+
     create_table_heroes: PostgresOperator = PostgresOperator(
         task_id="create_table_heroes",
         postgres_conn_id="postgres",
@@ -32,19 +39,20 @@ def create_table():
         sql="sql/create_table/create_table_pro_teams.sql",
     )
 
-    create_table_pro_players = PostgresOperator(
-        task_id="create_table_player_matches",
-        postgres_conn_id="postgres",
-        sql="sql/create_table/create_table_player_matches.sql",
-    )
-
     create_table_pro_matches = PostgresOperator(
         task_id="create_table_matches",
         postgres_conn_id="postgres",
         sql="sql/create_table/create_table_matches.sql",
     )
 
-    create_table_heroes >> create_table_pro_teams >> create_table_pro_players >> create_table_pro_matches
+    create_table_pro_players = PostgresOperator(
+        task_id="create_table_player_matches",
+        postgres_conn_id="postgres",
+        sql="sql/create_table/create_table_player_matches.sql",
+    )
+
+    (create_table_items >> create_table_heroes >> create_table_pro_teams >> create_table_pro_matches >>
+     create_table_pro_players)
 
 
 dag = create_table()

@@ -1,4 +1,4 @@
--- создать таблицу pro_matches, если она не существует
+-- создать таблицу matches, если она не существует
 CREATE TABLE IF NOT EXISTS matches (
     match_id BIGSERIAL PRIMARY KEY,
     radiant_win BOOLEAN,
@@ -20,6 +20,4 @@ CREATE TABLE IF NOT EXISTS matches (
     radiant_score INTEGER,
     dire_score INTEGER
     )
---    , CONSTRAINT fk_radiant_ FOREIGN KEY (radiant_team_id) REFERENCES pro_teams(team_id),
---    CONSTRAINT fk_dire_ FOREIGN KEY (dire_team_id) REFERENCES pro_teams(team_id))
     ;

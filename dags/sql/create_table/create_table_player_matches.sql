@@ -1,6 +1,6 @@
--- создать таблицу pro_players, если она не существует
+-- создать таблицу player_matches, если она не существует
 CREATE TABLE IF NOT EXISTS player_matches (
-    match_id BIGSERIAL,
+    match_id BIGSERIAL REFERENCES matches(match_id) ON DELETE CASCADE,
     account_id BIGSERIAL,
     player_slot INTEGER,
     hero_id INTEGER,
@@ -39,5 +39,4 @@ CREATE TABLE IF NOT EXISTS player_matches (
     net_worth INTEGER,
     PRIMARY KEY (match_id, player_slot)
     )
---    CONSTRAINT fk_pro_players FOREIGN KEY (team_id) REFERENCES pro_teams(team_id))
     ;
