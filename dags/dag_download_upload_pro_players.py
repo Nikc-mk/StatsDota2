@@ -11,27 +11,36 @@ from airflow.providers.http.hooks.http import HttpHook
     catchup=False,
     tags=["upload"],
 )
-def dag_download_upload_pro_players():
+def dag_download_upload_pro_matches():
     @task()
     def api_get_pro_matches():
+        """
+        Запрашивает список профессиональных матчей с API OpenDota.
+        Возвращает список профессиональных матчей.
+        """
         hook = HttpHook(method='GET', http_conn_id='opendota')
         response = hook.run(endpoint="/api/proMatches")
         pro_matches = response.json()
-        print(f"Fetched {len(pro_matches)} pro_players.")
+        print(f"ЗАГРУЖЕНО  {len(pro_matches)} ПРОМАТЧЕЙ.")
 
         return pro_matches
 
     @task
     def download_pro_matches_data(pro_matches: list):
+        """
+        Получает список профессиональных матчей с API OpenDota.
+        Проверяет по match_id наличие матча в базе данных, если в базе данных нет
+        информации о матче, то делает запрос к API OpenDota, для получения информации о матче.
+        Возвращает список с полной информацией о профессиональных матчах.
+        """
         data_pro_matches = list()
-        pg_hook = PostgresHook(postgres_conn_id="stat_dota2")
+        pg_hook = PostgresHook(postgres_conn_id="postgres")
 
-        for pro_match in pro_matches:
+        for pro_match in pro_matches[:10]:
             con_pg_hook = pg_hook.get_conn()
             cur_pg_hook = con_pg_hook.cursor()
-            # проверяю по match_id, наличие матча в базе данных
             query = f"""
-        SELECT exists (SELECT 1 FROM pro_matches WHERE match_id = {pro_match["match_id"]} LIMIT 1)
+        SELECT exists (SELECT 1 FROM matches WHERE match_id = {pro_match["match_id"]} LIMIT 1)
         """
             cur_pg_hook.execute(query)
             check_pro_match = cur_pg_hook.fetchone()[0]
@@ -51,6 +60,7 @@ def dag_download_upload_pro_players():
                 response = hook.run_with_advanced_retry(endpoint=f"/api/matches/{pro_match["match_id"]}",
                                                         _retry_args=retry_args)
                 pro_match_full_stat = response.json()
+                print(pro_match_full_stat)
             except Exception as ex:
                 print(f"ОШИБКА HttpHook: {ex}")
             print(f"ЗАПИСАЛИ МАТЧ:{pro_match_full_stat["match_id"]}")
@@ -59,7 +69,7 @@ def dag_download_upload_pro_players():
 
     @task()
     def upload_pro_teams(data_pro_matches: list):
-        pg_hook = PostgresHook(postgres_conn_id="stat_dota2")
+        pg_hook = PostgresHook(postgres_conn_id="postgres")
         # записываем информацию о командах
         for pro_match in data_pro_matches:
             try:
@@ -72,49 +82,101 @@ def dag_download_upload_pro_players():
             except Exception as ex:
                 print(ex)
 
-    #     # записываем информацию о игроках
-    #     try:
-    #         pg_hook.insert_rows(table="pro_players", replace=True, replace_index="account_id",
-    #                             rows=[
-    #                                 (proMatch["players"][0]["account_id"], proMatch["players"][0]["personaname"],
-    #                                  proMatch["players"][0]["name"], proMatch["players"][0]["lane_role"],
-    #                                  proMatch["radiant_team_id"],),
-    #
-    #                                 (proMatch["players"][5]["account_id"], proMatch["players"][5]["personaname"],
-    #                                  proMatch["players"][5]["name"], proMatch["players"][5]["lane_role"],
-    #                                  proMatch["dire_team_id"],)
-    #
-    #                             ],
-    #                             target_fields=["account_id", "personaname", "name", "lane_role", "team_id"])
-    #     except Exception as ex:
-    #         print(ex)
-    #     con_pg_hook.close()
-    #
-    # return pro_Matches
+    @task()
+    def upload_pro_matches(data_pro_matches: list):
+        pg_hook = PostgresHook(postgres_conn_id="postgres")
+        # записываем информацию о матчах
+        for pro_match in data_pro_matches:
+            try:
+                pg_hook.insert_rows(table="matches",
+                                    rows=[
+                                        (pro_match["match_id"], pro_match["radiant_win"], pro_match["start_time"],
+                                         pro_match["duration"], pro_match["first_blood_time"], pro_match["lobby_type"],
+                                         pro_match["game_mode"], pro_match["engine"], pro_match["radiant_team_id"],
+                                         pro_match["dire_team_id"], pro_match["radiant_name"],
+                                         pro_match["dire_name"],
+                                         pro_match["radiant_captain"], pro_match["dire_captain"],
+                                         # pro_match["radiant_gold_adv"],
+                                         # pro_match["radiant_xp_adv"],
+                                         pro_match["patch"], pro_match["radiant_score"],
+                                         pro_match["dire_score"],)
+                                    ],
+                                    target_fields=["match_id", "radiant_win", "start_time", "duration",
+                                                   "first_blood_time", "lobby_type", "game_mode", "engine",
+                                                   "radiant_team_id", "dire_team_id", "radiant_name",
+                                                   "dire_name", "radiant_captain", "dire_captain",
+                                                   # "radiant_gold_adv", "radiant_xp_adv",
+                                                   "patch",
+                                                   "radiant_score", "dire_score"])
+            except Exception as ex:
+                print(ex)
+            print(f"ИНФОРМАЦИЯ О МАТЧЕ {pro_match["match_id"]} ЗАПИСАНА!")
 
-    # @task(multiple_outputs=True)
-    # def upload_data_pro_players(data_pro_players: list | bool):
-    #     if data_pro_players is False:
-    #         return print("ALL pro_players are UPLOAD")
-    #
-    #     for pro_player in data_pro_players:
-    #         try:
-    #             src = PostgresHook(postgres_conn_id="stat_dota2")
-    #             src.insert_rows(table="pro_players",
-    #                             rows=[(pro_player["account_id"], pro_player["personaname"],
-    #                                    pro_player["loccountrycode"],
-    #                                    pro_player["name"],
-    #                                    pro_player["fantasy_role"], pro_player["team_id"], pro_player["last_login"],)],
-    #                             target_fields=["account_id", "personaname", "loccountrycode", "name", "fantasy_role",
-    #                                            "team_id", "last_login"])
-    #         except Exception as e:
-    #             print(e)
-    #         print("Pro_players updated successfully")
+    @task()
+    def upload_player_matches(data_pro_matches: list):
+        pg_hook = PostgresHook(postgres_conn_id="postgres")
+        # записываем информацию о матчах
+        for pro_match in data_pro_matches:
+            for i in range(10):
+                try:
+                    pg_hook.insert_rows(table="player_matches",
+                                        rows=[
+                                            (pro_match["match_id"],
+                                             pro_match["players"][i]["account_id"],
+                                             i,
+                                             pro_match["players"][i]["hero_id"],
+                                             pro_match["players"][i]["item_0"],
+                                             pro_match["players"][i]["item_1"],
+                                             pro_match["players"][i]["item_2"],
+                                             pro_match["players"][i]["item_3"],
+                                             pro_match["players"][i]["item_4"],
+                                             pro_match["players"][i]["item_5"],
+                                             pro_match["players"][i]["kills"],
+                                             pro_match["players"][i]["deaths"],
+                                             pro_match["players"][i]["assists"],
+                                             pro_match["players"][i]["leaver_status"],
+                                             pro_match["players"][i]["gold"],
+                                             pro_match["players"][i]["last_hits"],
+                                             pro_match["players"][i]["denies"],
+                                             pro_match["players"][i]["gold_per_min"],
+                                             pro_match["players"][i]["xp_per_min"],
+                                             pro_match["players"][i]["gold_spent"],
+                                             pro_match["players"][i]["hero_damage"],
+                                             pro_match["players"][i]["tower_damage"],
+                                             pro_match["players"][i]["hero_healing"],
+                                             pro_match["players"][i]["level"],
+                                             pro_match["players"][i]["stuns"],
+                                             pro_match["players"][i]["gold_t"],
+                                             pro_match["players"][i]["lh_t"],
+                                             pro_match["players"][i]["xp_t"],
+                                             pro_match["players"][i]["creeps_stacked"],
+                                             pro_match["players"][i]["camps_stacked"],
+                                             pro_match["players"][i]["lane"],
+                                             pro_match["players"][i]["is_roaming"],
+                                             pro_match["players"][i]["roshans_killed"],
+                                             pro_match["players"][i]["observers_placed"],
+                                             pro_match["players"][i]["dn_t"],
+                                             pro_match["players"][i]["item_neutral"],
+                                             pro_match["players"][i]["net_worth"],
+                                             )
+                                        ],
+                                        target_fields=["match_id", "account_id", "player_slot", "hero_id", "item_0",
+                                                       "item_1", "item_2", "item_3", "item_4", "item_5", "kills",
+                                                       "deaths", "assists", "leaver_status", "gold", "last_hits",
+                                                       "denies", "gold_per_min", "xp_per_min", "gold_spent",
+                                                       "hero_damage", "tower_damage", "hero_healing", "level", "stuns",
+                                                       "gold_t", "lh_t", "xp_t",
+                                                       "creeps_stacked", "camps_stacked",
+                                                       "lane", "is_roaming", "roshans_killed", "observers_placed",
+                                                       "dn_t", "item_neutral", "net_worth"])
+                except Exception as ex:
+                    print(ex)
+                print(f"ИНФОРМАЦИЯ О ИГРОКЕ СЛОТ №{i} В МАТЧЕ {pro_match["match_id"]} ЗАПИСАНА!")
 
     lst_new_pro_matches = api_get_pro_matches()
     full_data_pro_matches = download_pro_matches_data(lst_new_pro_matches)
-    upload_pro_teams(full_data_pro_matches)
-    # upload_data_pro_players(data_check_count_pro_players)
+    upload_pro_teams(full_data_pro_matches) >> upload_pro_matches(full_data_pro_matches) >> upload_player_matches(
+        full_data_pro_matches)
 
 
-dag_download_upload_pro_players()
+dag_download_upload_pro_matches()

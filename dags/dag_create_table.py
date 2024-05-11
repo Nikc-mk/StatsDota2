@@ -8,6 +8,7 @@ import pendulum
     start_date=pendulum.datetime(2024, 4, 27),
     schedule="@once",
     catchup=False,
+    tags=["upload"],
 )
 def create_table():
     """
@@ -21,25 +22,25 @@ def create_table():
     """
     create_table_heroes: PostgresOperator = PostgresOperator(
         task_id="create_table_heroes",
-        postgres_conn_id="stat_dota2",
+        postgres_conn_id="postgres",
         sql="sql/create_table/create_table_heroes.sql",
     )
 
     create_table_pro_teams = PostgresOperator(
         task_id="create_table_pro_teams",
-        postgres_conn_id="stat_dota2",
+        postgres_conn_id="postgres",
         sql="sql/create_table/create_table_pro_teams.sql",
     )
 
     create_table_pro_players = PostgresOperator(
         task_id="create_table_player_matches",
-        postgres_conn_id="stat_dota2",
+        postgres_conn_id="postgres",
         sql="sql/create_table/create_table_player_matches.sql",
     )
 
     create_table_pro_matches = PostgresOperator(
         task_id="create_table_matches",
-        postgres_conn_id="stat_dota2",
+        postgres_conn_id="postgres",
         sql="sql/create_table/create_table_matches.sql",
     )
 

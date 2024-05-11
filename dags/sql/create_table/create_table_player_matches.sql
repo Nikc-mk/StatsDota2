@@ -1,5 +1,6 @@
 -- создать таблицу pro_players, если она не существует
 CREATE TABLE IF NOT EXISTS player_matches (
+    match_id BIGSERIAL,
     account_id BIGSERIAL,
     player_slot INTEGER,
     hero_id INTEGER,
@@ -22,7 +23,7 @@ CREATE TABLE IF NOT EXISTS player_matches (
     hero_damage INTEGER,
     tower_damage INTEGER,
     hero_healing INTEGER,
-    'level' INTEGER,
+    level INTEGER,
     stuns REAL,
     gold_t INTEGER[],
     lh_t INTEGER[],
@@ -35,17 +36,8 @@ CREATE TABLE IF NOT EXISTS player_matches (
     observers_placed INTEGER,
     dn_t INTEGER[],
     item_neutral INTEGER,
-    net_worth INTEGER)
-
-
-
-
-
-
-
-
-
-
+    net_worth INTEGER,
+    PRIMARY KEY (match_id, player_slot)
     )
 --    CONSTRAINT fk_pro_players FOREIGN KEY (team_id) REFERENCES pro_teams(team_id))
     ;

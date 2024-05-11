@@ -63,7 +63,7 @@ def dag_download_upload_heroes():
         :param heroes:
         :return:
         """
-        pg_hook = PostgresHook(postgres_conn_id="stat_dota2")
+        pg_hook = PostgresHook(postgres_conn_id="postgres")
         con_pg_hook = pg_hook.get_conn()
         cur_pg_hook = con_pg_hook.cursor()
         query = """
@@ -96,7 +96,7 @@ def dag_download_upload_heroes():
 
         for hero in data_heroes:
             try:
-                src = PostgresHook(postgres_conn_id="stat_dota2")
+                src = PostgresHook(postgres_conn_id="postgres")
                 src.insert_rows(table="heroes",
                                 rows=[(hero["id"], hero["name"], hero["localized_name"], hero["primary_attr"],
                                        hero["attack_type"], hero["roles"],)],
