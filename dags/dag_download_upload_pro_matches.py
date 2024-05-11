@@ -12,6 +12,12 @@ from airflow.providers.http.hooks.http import HttpHook
     tags=["upload"],
 )
 def dag_download_upload_pro_matches():
+    """
+    Эта функция определяет DAG для загрузки и сохранения статистики профессиональных матчей Dota 2.
+    DAG состоит из пяти основных задач: получение списка профессиональных матчей, загрузка полной статистики матчей,
+    сохранение информации о командах, сохранение информации о матчах и сохранение информации об игроках.
+    """
+
     @task()
     def api_get_pro_matches():
         """
@@ -21,17 +27,16 @@ def dag_download_upload_pro_matches():
         hook = HttpHook(method='GET', http_conn_id='opendota')
         response = hook.run(endpoint="/api/proMatches")
         pro_matches = response.json()
-        print(f"ЗАГРУЖЕНО  {len(pro_matches)} ПРОМАТЧЕЙ.")
+        print(f"Загружено {len(pro_matches)} профессиональных матчей.")
 
         return pro_matches
 
     @task
     def download_pro_matches_data(pro_matches: list):
         """
-        Получает список профессиональных матчей с API OpenDota.
-        Проверяет по match_id наличие матча в базе данных, если в базе данных нет
-        информации о матче, то делает запрос к API OpenDota, для получения информации о матче.
-        Возвращает список с полной информацией о профессиональных матчах.
+        Загружает полную статистику профессиональных матчей из API OpenDota.
+        Проверяет, существует ли матч в базе данных, и если нет, запрашивает данные матча.
+        Возвращает список полной статистики профессиональных матчей.
         """
         data_pro_matches = list()
         pg_hook = PostgresHook(postgres_conn_id="postgres")
@@ -60,17 +65,28 @@ def dag_download_upload_pro_matches():
                 response = hook.run_with_advanced_retry(endpoint=f"/api/matches/{pro_match["match_id"]}",
                                                         _retry_args=retry_args)
                 pro_match_full_stat = response.json()
-                print(pro_match_full_stat)
+                print(f"ЗАПИСАЛИ МАТЧ:{pro_match_full_stat['match_id']}")
+                data_pro_matches.append(pro_match_full_stat)
             except Exception as ex:
                 print(f"ОШИБКА HttpHook: {ex}")
-            print(f"ЗАПИСАЛИ МАТЧ:{pro_match_full_stat["match_id"]}")
-            data_pro_matches.append(pro_match_full_stat)
         return data_pro_matches
 
     @task()
     def upload_pro_teams(data_pro_matches: list):
+        """
+        Загружает информацию о профессиональных командах в базу данных PostgreSQL.
+
+        Параметры:
+        data_pro_matches (list): Список словарей, каждый из которых содержит полную статистику одного профессионального матча.
+
+        Использует:
+        PostgresHook: для подключения к базе данных PostgreSQL.
+
+        Возвращает:
+        None
+        """
         pg_hook = PostgresHook(postgres_conn_id="postgres")
-        # записываем информацию о командах
+        # Записываем информацию о командах
         for pro_match in data_pro_matches:
             try:
                 pg_hook.insert_rows(table="pro_teams", replace=True, replace_index="team_id",
@@ -84,8 +100,21 @@ def dag_download_upload_pro_matches():
 
     @task()
     def upload_pro_matches(data_pro_matches: list):
+        """
+        Загружает информацию о профессиональных матчах в базу данных PostgreSQL.
+
+        Параметры:
+        data_pro_matches (list): Список словарей, каждый из которых содержит полную статистику
+        одного профессионального матча.
+
+        Использует:
+        PostgresHook: для подключения к базе данных PostgreSQL.
+
+        Возвращает:
+        None
+        """
         pg_hook = PostgresHook(postgres_conn_id="postgres")
-        # записываем информацию о матчах
+        # Записываем информацию о матчах
         for pro_match in data_pro_matches:
             try:
                 pg_hook.insert_rows(table="matches",
@@ -110,10 +139,23 @@ def dag_download_upload_pro_matches():
                                                    "radiant_score", "dire_score"])
             except Exception as ex:
                 print(ex)
-            print(f"ИНФОРМАЦИЯ О МАТЧЕ {pro_match["match_id"]} ЗАПИСАНА!")
+            print(f"ИНФОРМАЦИЯ О МАТЧЕ {pro_match['match_id']} ЗАПИСАНА!")
 
     @task()
     def upload_player_matches(data_pro_matches: list):
+        """
+        Загружает информацию об игроках в профессиональных матчах в базу данных PostgreSQL.
+
+        Параметры:
+        data_pro_matches (list): Список словарей, каждый из которых содержит полную статистику
+        одного профессионального матча.
+
+        Использует:
+        PostgresHook: для подключения к базе данных PostgreSQL.
+
+        Возвращает:
+        None
+        """
         pg_hook = PostgresHook(postgres_conn_id="postgres")
         # записываем информацию о матчах
         for pro_match in data_pro_matches:
@@ -175,8 +217,9 @@ def dag_download_upload_pro_matches():
 
     lst_new_pro_matches = api_get_pro_matches()
     full_data_pro_matches = download_pro_matches_data(lst_new_pro_matches)
-    upload_pro_teams(full_data_pro_matches) >> upload_pro_matches(full_data_pro_matches) >> upload_player_matches(
-        full_data_pro_matches)
+    upload_pro_teams(full_data_pro_matches)
+    upload_pro_matches(full_data_pro_matches)
+    upload_player_matches(full_data_pro_matches)
 
 
 dag_download_upload_pro_matches()

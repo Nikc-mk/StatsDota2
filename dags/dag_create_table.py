@@ -12,15 +12,15 @@ import pendulum
 )
 def create_table():
     """
-    Эта функция создает четыре таблицы в базе данных Postgres: heroes, pro_teams, pro_players, и pro_matches.
-    Код организован как диаграмма связей (DAG) с использованием библиотеки Airflow.
-    Параметр default_args определяет дефолтные аргументы для всех задач в диаграмме, включая уведомления электронной
-    почты и политики повторных попыток.
-    Класс PostgresOperator используется для выполнения SQL-запросов в базе данных.
-    Параметр schedule указывает, что диаграмма должна быть выполнена один раз, на указанную дату start_date.
-    Параметр catchup установлен на False, чтобы предотвратить выполнение диаграммы за пределами расписания.
-    """
+    Создает таблицы в базе данных PostgreSQL для хранения информации о предметах, героях,
+    профессиональных командах и матчах.
 
+    Выполняет последовательное создание таблиц с использованием оператора PostgresOperator.
+    Созданные таблицы: items, heroes, pro_teams, matches, player_matches.
+
+    Возвращает:
+    None
+    """
     create_table_items: PostgresOperator = PostgresOperator(
         task_id="create_table_items",
         postgres_conn_id="postgres",
