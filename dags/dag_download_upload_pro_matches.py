@@ -44,7 +44,7 @@ def dag_download_upload_pro_matches():
             con_pg_hook = pg_hook.get_conn()
             cur_pg_hook = con_pg_hook.cursor()
             query = f"""
-        SELECT exists (SELECT 1 FROM matches WHERE match_id = {pro_match["match_id"]} LIMIT 1)
+        SELECT exists (SELECT 1 FROM player_matches WHERE match_id = {pro_match["match_id"]} LIMIT 1)
         """
             cur_pg_hook.execute(query)
             check_pro_match = cur_pg_hook.fetchone()[0]
