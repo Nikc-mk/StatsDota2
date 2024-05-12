@@ -5,9 +5,9 @@ import pendulum
 
 @dag(
     dag_id="create_tables",
-    start_date=pendulum.datetime(2024, 4, 27),
+    start_date=pendulum.datetime(2024, 5, 9),
     schedule="@once",
-    catchup=False,
+    catchup=True,
     tags=["upload"],
 )
 def create_table():

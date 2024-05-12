@@ -19,9 +19,9 @@ from airflow.providers.http.hooks.http import HttpHook
 
 
 @dag(
-    schedule="@once",
-    start_date=pendulum.datetime(2024, 4, 26, tz="UTC"),
-    catchup=False,
+    schedule="@weekly",
+    start_date=pendulum.datetime(2024, 5, 10, tz="UTC"),
+    catchup=True,
     tags=["upload"],
 )
 def dag_download_upload_heroes():
@@ -84,17 +84,17 @@ def dag_download_upload_heroes():
         return heroes
 
     @task(multiple_outputs=True)
-    def upload_data_heroes(data_heroes: list | bool):
+    def upload_data_heroes(heroes: list | bool):
         """
         Эта функция перебирает полученные данные о героях и вызывает insert_rows для каждого героя,
         чтобы загрузить его в базу данных.
-        :param data_heroes:
+        :param heroes:
         :return:
         """
-        if data_heroes is False:
+        if heroes is False:
             return print("ALL heroes are UPLOAD")
 
-        for hero in data_heroes:
+        for hero in heroes:
             try:
                 src = PostgresHook(postgres_conn_id="postgres")
                 src.insert_rows(table="heroes",

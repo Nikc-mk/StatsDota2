@@ -5,9 +5,9 @@ from airflow.providers.http.hooks.http import HttpHook
 
 
 @dag(
-    schedule="@once",
-    start_date=pendulum.datetime(2024, 4, 26, tz="UTC"),
-    catchup=False,
+    schedule="@weekly",
+    start_date=pendulum.datetime(2024, 5, 10, tz="UTC"),
+    catchup=True,
     tags=["upload"],
 )
 def dag_download_upload_items():

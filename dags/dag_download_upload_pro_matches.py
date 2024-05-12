@@ -1,4 +1,5 @@
 import pendulum
+from datetime import timedelta
 import tenacity
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -6,8 +7,9 @@ from airflow.providers.http.hooks.http import HttpHook
 
 
 @dag(
-    schedule="@once",
-    start_date=pendulum.datetime(2024, 4, 26, tz="UTC"),
+    # schedule="@once",
+    schedule_interval=timedelta(minutes=30),
+    start_date=pendulum.datetime(2024, 5, 10, tz="UTC"),
     catchup=False,
     tags=["upload"],
 )
