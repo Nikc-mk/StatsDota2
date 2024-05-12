@@ -49,8 +49,8 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  #  image: ${AIRFLOW_IMAGE_NAME}
-  build: .
+  image: ${AIRFLOW_IMAGE_NAME:-3kaal6/stats_dota2:main}
+  # build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -59,8 +59,13 @@ x-airflow-common:
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+#    Включить кнопку тестирования соединений в UI airflow
+    AIRFLOW__CORE__TEST_CONNECTION: ${AIRFLOW__CORE__TEST_CONNECTION}
+#    создать соединения из .env
+    AIRFLOW_CONN_OPENDOTA: ${AIRFLOW_CONN_OPENDOTA}
+    AIRFLOW_CONN_POSTGRES: ${AIRFLOW_CONN_POSTGRES}
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -68,7 +73,7 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+#    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
     # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
@@ -87,13 +92,15 @@ x-airflow-common:
 
 services:
   postgres:
-    image: postgres:13
+    image: postgres:16
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 10s
@@ -149,10 +156,10 @@ services:
     <<: *airflow-common
     command: celery worker
     healthcheck:
-      # yamllint disable rule:line-length
+      #      yamllint disable rule:line-length
       test:
         - "CMD-SHELL"
-        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -dags "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -dags "celery@$${HOSTNAME}"'
+        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
       interval: 30s
       timeout: 10s
       retries: 5
@@ -242,7 +249,6 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-      _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
