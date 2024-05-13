@@ -1,7 +1,6 @@
-from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.decorators import dag
 import pendulum
-
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
 @dag(
     dag_id="create_tables",
@@ -15,39 +14,49 @@ def create_table():
     Создает таблицы в базе данных PostgreSQL для хранения информации о предметах, героях,
     профессиональных командах и матчах.
 
-    Выполняет последовательное создание таблиц с использованием оператора PostgresOperator.
+    Выполняет последовательное создание таблиц с использованием оператора SQLExecuteQueryOperator.
     Созданные таблицы: items, heroes, pro_teams, matches, player_matches.
 
     Возвращает:
     None
     """
-    create_table_items: PostgresOperator = PostgresOperator(
+    create_table_items: operator = SQLExecuteQueryOperator(
         task_id="create_table_items",
-        postgres_conn_id="postgres",
-        sql="sql/create_table/create_table_items.sql",
+        conn_id="postgres",
+        autocommit=True,
+        database="postgres",
+        sql="sql/create_table/create_table_items.sql"
     )
 
-    create_table_heroes: PostgresOperator = PostgresOperator(
+    create_table_heroes: operator = SQLExecuteQueryOperator(
         task_id="create_table_heroes",
-        postgres_conn_id="postgres",
+        conn_id="postgres",
+        autocommit=True,
+        database="postgres",
         sql="sql/create_table/create_table_heroes.sql",
     )
 
-    create_table_pro_teams = PostgresOperator(
+    create_table_pro_teams: operator = SQLExecuteQueryOperator(
         task_id="create_table_pro_teams",
-        postgres_conn_id="postgres",
+        conn_id="postgres",
+        autocommit=True,
+        database="postgres",
         sql="sql/create_table/create_table_pro_teams.sql",
     )
 
-    create_table_pro_matches = PostgresOperator(
+    create_table_pro_matches: operator = SQLExecuteQueryOperator(
         task_id="create_table_matches",
-        postgres_conn_id="postgres",
+        conn_id="postgres",
+        autocommit=True,
+        database="postgres",
         sql="sql/create_table/create_table_matches.sql",
     )
 
-    create_table_pro_players = PostgresOperator(
+    create_table_pro_players: operator = SQLExecuteQueryOperator(
         task_id="create_table_player_matches",
-        postgres_conn_id="postgres",
+        conn_id="postgres",
+        autocommit=True,
+        database="postgres",
         sql="sql/create_table/create_table_player_matches.sql",
     )
 
