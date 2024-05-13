@@ -5,18 +5,6 @@ from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.http.hooks.http import HttpHook
 
-# import pydantic
-
-# 
-# class Hero(pydantic.BaseModel):
-#     id: int
-#     name: str
-#     localized_name: str
-#     primary_attr: str
-#     attack_type: str
-#     roles: List[str]
-#     legs: int
-
 
 @dag(
     schedule="@weekly",
