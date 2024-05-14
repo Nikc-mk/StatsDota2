@@ -1,9 +1,7 @@
-# from typing import List
-
 import pendulum
 from airflow.decorators import dag, task
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 @dag(
@@ -34,7 +32,7 @@ def dag_download_upload_heroes():
         Эта функция выполняет HTTP-запрос к OpenDota и возвращает данные о героях в формате JSON.
         :return:
         """
-        hook = HttpHook(method='GET', http_conn_id='opendota')
+        hook = HttpHook(method="GET", http_conn_id="opendota")
         response = hook.run(endpoint="/api/heroes")
         heroes = response.json()
         print(f"Fetched {len(heroes)} heroes.")
@@ -85,10 +83,27 @@ def dag_download_upload_heroes():
         for hero in heroes:
             try:
                 src = PostgresHook(postgres_conn_id="postgres")
-                src.insert_rows(table="heroes",
-                                rows=[(hero["id"], hero["name"], hero["localized_name"], hero["primary_attr"],
-                                       hero["attack_type"], hero["roles"],)],
-                                target_fields=["id", "name", "localized_name", "primary_attr", "attack_type", "roles"])
+                src.insert_rows(
+                    table="heroes",
+                    rows=[
+                        (
+                            hero["id"],
+                            hero["name"],
+                            hero["localized_name"],
+                            hero["primary_attr"],
+                            hero["attack_type"],
+                            hero["roles"],
+                        )
+                    ],
+                    target_fields=[
+                        "id",
+                        "name",
+                        "localized_name",
+                        "primary_attr",
+                        "attack_type",
+                        "roles",
+                    ],
+                )
             except Exception as e:
                 print(e)
 

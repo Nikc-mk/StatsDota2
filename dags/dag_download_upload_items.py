@@ -1,7 +1,7 @@
 import pendulum
 from airflow.decorators import dag, task
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 @dag(
@@ -22,7 +22,7 @@ def dag_download_upload_items():
         Эта функция выполняет HTTP-запрос к OpenDota и возвращает данные о предметах в формате JSON.
         :return: Список словарей, каждый из которых представляет один предмет.
         """
-        hook = HttpHook(method='GET', http_conn_id='opendota')
+        hook = HttpHook(method="GET", http_conn_id="opendota")
         response = hook.run(endpoint="/api/explorer?sql=SELECT%20*%20from%20items")
         items = response.json()
         print(f"Извлечено {len(items)} предметов.")
@@ -70,11 +70,29 @@ def dag_download_upload_items():
         for item in data_items:
             try:
                 hook = PostgresHook(postgres_conn_id="postgres")
-                hook.insert_rows(table="items",
-                                 rows=[(item["id"], item["name"], item["cost"], item["secret_shop"],
-                                        item["side_shop"], item["recipe"], item["localized_name"],)],
-                                 target_fields=["id", "name", "cost", "secret_shop", "side_shop", "recipe",
-                                                "localized_name"])
+                hook.insert_rows(
+                    table="items",
+                    rows=[
+                        (
+                            item["id"],
+                            item["name"],
+                            item["cost"],
+                            item["secret_shop"],
+                            item["side_shop"],
+                            item["recipe"],
+                            item["localized_name"],
+                        )
+                    ],
+                    target_fields=[
+                        "id",
+                        "name",
+                        "cost",
+                        "secret_shop",
+                        "side_shop",
+                        "recipe",
+                        "localized_name",
+                    ],
+                )
             except Exception as e:
                 print(e)
 

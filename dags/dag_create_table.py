@@ -1,8 +1,8 @@
-import pendulum
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from airflow import DAG
-
 import os
+
+import pendulum
+from airflow import DAG
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
 dag = DAG(
     dag_id="create_tables",
@@ -10,7 +10,7 @@ dag = DAG(
     schedule="@once",
     catchup=True,
     tags=["upload"],
-    template_searchpath=f'{os.path.dirname(__file__)}/sql/create_table'
+    template_searchpath=f"{os.path.dirname(__file__)}/sql/create_table",
 )
 
 create_table_items = SQLExecuteQueryOperator(
@@ -58,5 +58,10 @@ create_table_pro_players = SQLExecuteQueryOperator(
     dag=dag,
 )
 
-(create_table_items >> create_table_heroes >> create_table_pro_teams >> create_table_pro_matches >>
- create_table_pro_players)
+(
+    create_table_items
+    >> create_table_heroes
+    >> create_table_pro_teams
+    >> create_table_pro_matches
+    >> create_table_pro_players
+)
