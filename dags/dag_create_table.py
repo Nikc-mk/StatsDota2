@@ -9,7 +9,7 @@ dag = DAG(
     start_date=pendulum.datetime(2024, 5, 9),
     schedule="@once",
     catchup=True,
-    tags=["upload"],
+    tags=["table"],
     template_searchpath=f"{os.path.dirname(__file__)}/sql/create_table",
 )
 
