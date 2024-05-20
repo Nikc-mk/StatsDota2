@@ -1,7 +1,4 @@
-from datetime import timedelta
-
 import pendulum
-import tenacity
 from airflow.decorators import dag, task
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
