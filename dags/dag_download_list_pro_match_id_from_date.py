@@ -32,10 +32,12 @@ def dag_download_list_pro_match_id_from_date():
         начиная с даты DATE_START.
         """
         hook = HttpHook(method="GET", http_conn_id="opendota")
-        response = hook.run(endpoint="/api/explorer?sql=SELECT match_id FROM matches join leagues using(leagueid)"
-                                     "WHERE TRUE AND "
-                                     f"matches.start_time >= extract(epoch from timestamp '{DATE_START}')"
-                                     "AND leagues.tier = 'professional'")
+        response = hook.run(
+            endpoint="/api/explorer?sql=SELECT match_id FROM matches join leagues using(leagueid)"
+            "WHERE TRUE AND "
+            f"matches.start_time >= extract(epoch from timestamp '{DATE_START}')"
+            "AND leagues.tier = 'professional'"
+        )
         pro_matches = response.json()
         print(f"ИЗВЛЕЧЕНО {len(pro_matches["rows"])} ПРО МАТЧЕЙ.")
 
@@ -53,11 +55,7 @@ def dag_download_list_pro_match_id_from_date():
                 table="temp_promatches_download_queue",
                 replace=True,
                 replace_index="match_id",
-                rows=[
-                    (
-                        pro_match["match_id"],
-                    )
-                ],
+                rows=[(pro_match["match_id"],)],
                 target_fields=["match_id"],
             )
 

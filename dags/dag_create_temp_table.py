@@ -21,7 +21,3 @@ create_table_items = SQLExecuteQueryOperator(
     sql="create_temp_promatches_download_queue.sql",
     dag=dag,
 )
-
-
-
-
