@@ -1,4 +1,4 @@
--- создать таблицу временную таблицу очередь на загрузку проф матчей, если она не существует
+-- создать таблицу временную таблицу очередь на загрузку проф матчей, если она не существует BIGSERIAL
 CREATE TABLE IF NOT EXISTS temp_promatches_download_queue (
-    match_id INTEGER PRIMARY KEY
+    match_id BIGSERIAL PRIMARY KEY
     );

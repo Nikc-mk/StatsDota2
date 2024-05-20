@@ -25,7 +25,7 @@ def dag_download_upload_items():
         hook = HttpHook(method="GET", http_conn_id="opendota")
         response = hook.run(endpoint="/api/explorer?sql=SELECT%20*%20from%20items")
         items = response.json()
-        print(f"Извлечено {len(items)} предметов.")
+        print(f"Извлечено {len(items["rows"])} предметов.")
 
         return items["rows"]
 
