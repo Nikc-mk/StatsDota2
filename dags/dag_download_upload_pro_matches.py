@@ -1,9 +1,9 @@
 from datetime import timedelta
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
 import pendulum
 import tenacity
 from airflow.decorators import dag, task
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
@@ -42,7 +42,7 @@ def dag_download_upload_pro_matches():
         Возвращает список полной статистики профессиональных матчей.
         """
         data_pro_matches = list()
-        pro_matches = kwargs['ti'].xcom_pull(task_ids='get_pro_matches_from_tepm_table')
+        pro_matches = kwargs["ti"].xcom_pull(task_ids="get_pro_matches_from_tepm_table")
         for pro_match in pro_matches:
             pg_hook = PostgresHook(postgres_conn_id="postgres")
             con_pg_hook = pg_hook.get_conn()
@@ -79,7 +79,7 @@ def dag_download_upload_pro_matches():
 
     @task()
     def upload_pro_teams(**kwargs):
-        data_pro_matches = kwargs['ti'].xcom_pull(task_ids='download_pro_matches_data')
+        data_pro_matches = kwargs["ti"].xcom_pull(task_ids="download_pro_matches_data")
         pg_hook = PostgresHook(postgres_conn_id="postgres")
         # Записываем информацию о командах
         for pro_match in data_pro_matches:
@@ -115,13 +115,15 @@ def dag_download_upload_pro_matches():
         Возвращает:
         None
         """
-        data_pro_matches = kwargs['ti'].xcom_pull(task_ids='download_pro_matches_data')
+        data_pro_matches = kwargs["ti"].xcom_pull(task_ids="download_pro_matches_data")
         pg_hook = PostgresHook(postgres_conn_id="postgres")
         # Записываем информацию о матчах
         for pro_match in data_pro_matches:
             try:
                 pg_hook.insert_rows(
-                    table="matches", replace=True, replace_index="match_id",
+                    table="matches",
+                    replace=True,
+                    replace_index="match_id",
                     rows=[
                         (
                             pro_match["match_id"],
@@ -185,7 +187,7 @@ def dag_download_upload_pro_matches():
         Возвращает:
         None
         """
-        data_pro_matches = kwargs['ti'].xcom_pull(task_ids='download_pro_matches_data')
+        data_pro_matches = kwargs["ti"].xcom_pull(task_ids="download_pro_matches_data")
         pg_hook = PostgresHook(postgres_conn_id="postgres")
         # записываем информацию о матчах
         for pro_match in data_pro_matches:
