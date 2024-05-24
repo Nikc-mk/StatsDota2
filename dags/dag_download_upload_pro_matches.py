@@ -1,5 +1,4 @@
 from datetime import timedelta
-from airflow.providers.common.sql.hooks.sql import DbApiHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
 import pendulum
@@ -44,9 +43,8 @@ def dag_download_upload_pro_matches():
         """
         data_pro_matches = list()
         pro_matches = kwargs['ti'].xcom_pull(task_ids='get_pro_matches_from_tepm_table')
-        pg_hook = PostgresHook(postgres_conn_id="postgres")
         for pro_match in pro_matches:
-            print("!!!!!!!!!", pro_match[0])
+            pg_hook = PostgresHook(postgres_conn_id="postgres")
             con_pg_hook = pg_hook.get_conn()
             cur_pg_hook = con_pg_hook.cursor()
             query = f"""
@@ -85,25 +83,22 @@ def dag_download_upload_pro_matches():
         pg_hook = PostgresHook(postgres_conn_id="postgres")
         # Записываем информацию о командах
         for pro_match in data_pro_matches:
-            try:
-                pg_hook.insert_rows(
-                    table="pro_teams",
-                    replace=True,
-                    replace_index="team_id",
-                    rows=[
-                        (
-                            pro_match["radiant_team_id"],
-                            pro_match["radiant_name"],
-                        ),
-                        (
-                            pro_match["dire_team_id"],
-                            pro_match["dire_name"],
-                        ),
-                    ],
-                    target_fields=["team_id", "name"],
-                )
-            except Exception as ex:
-                print(ex)
+            pg_hook.insert_rows(
+                table="pro_teams",
+                replace=True,
+                replace_index="team_id",
+                rows=[
+                    (
+                        pro_match["radiant_team_id"],
+                        pro_match["radiant_name"],
+                    ),
+                    (
+                        pro_match["dire_team_id"],
+                        pro_match["dire_name"],
+                    ),
+                ],
+                target_fields=["team_id", "name"],
+            )
 
     @task()
     def upload_pro_matches(**kwargs):
@@ -124,52 +119,55 @@ def dag_download_upload_pro_matches():
         pg_hook = PostgresHook(postgres_conn_id="postgres")
         # Записываем информацию о матчах
         for pro_match in data_pro_matches:
-            pg_hook.insert_rows(
-                table="matches", replace=True, replace_index="match_id",
-                rows=[
-                    (
-                        pro_match["match_id"],
-                        pro_match["radiant_win"],
-                        pro_match["start_time"],
-                        pro_match["duration"],
-                        pro_match["first_blood_time"],
-                        pro_match["lobby_type"],
-                        pro_match["game_mode"],
-                        pro_match["engine"],
-                        pro_match["radiant_team_id"],
-                        pro_match["dire_team_id"],
-                        pro_match["radiant_name"],
-                        pro_match["dire_name"],
-                        pro_match["radiant_captain"],
-                        pro_match["dire_captain"],
-                        # pro_match["radiant_gold_adv"],
-                        # pro_match["radiant_xp_adv"],
-                        pro_match["patch"],
-                        pro_match["radiant_score"],
-                        pro_match["dire_score"],
-                    )
-                ],
-                target_fields=[
-                    "match_id",
-                    "radiant_win",
-                    "start_time",
-                    "duration",
-                    "first_blood_time",
-                    "lobby_type",
-                    "game_mode",
-                    "engine",
-                    "radiant_team_id",
-                    "dire_team_id",
-                    "radiant_name",
-                    "dire_name",
-                    "radiant_captain",
-                    "dire_captain",
-                    # "radiant_gold_adv", "radiant_xp_adv",
-                    "patch",
-                    "radiant_score",
-                    "dire_score",
-                ],
-            )
+            try:
+                pg_hook.insert_rows(
+                    table="matches", replace=True, replace_index="match_id",
+                    rows=[
+                        (
+                            pro_match["match_id"],
+                            pro_match["radiant_win"],
+                            pro_match["start_time"],
+                            pro_match["duration"],
+                            pro_match["first_blood_time"],
+                            pro_match["lobby_type"],
+                            pro_match["game_mode"],
+                            pro_match["engine"],
+                            pro_match["radiant_team_id"],
+                            pro_match["dire_team_id"],
+                            pro_match["radiant_name"],
+                            pro_match["dire_name"],
+                            pro_match["radiant_captain"],
+                            pro_match["dire_captain"],
+                            # pro_match["radiant_gold_adv"],
+                            # pro_match["radiant_xp_adv"],
+                            pro_match["patch"],
+                            pro_match["radiant_score"],
+                            pro_match["dire_score"],
+                        )
+                    ],
+                    target_fields=[
+                        "match_id",
+                        "radiant_win",
+                        "start_time",
+                        "duration",
+                        "first_blood_time",
+                        "lobby_type",
+                        "game_mode",
+                        "engine",
+                        "radiant_team_id",
+                        "dire_team_id",
+                        "radiant_name",
+                        "dire_name",
+                        "radiant_captain",
+                        "dire_captain",
+                        # "radiant_gold_adv", "radiant_xp_adv",
+                        "patch",
+                        "radiant_score",
+                        "dire_score",
+                    ],
+                )
+            except Exception as e:
+                print(e)
             print(f"ИНФОРМАЦИЯ О МАТЧЕ {pro_match['match_id']} ЗАПИСАНА!")
 
     @task()
@@ -192,94 +190,117 @@ def dag_download_upload_pro_matches():
         # записываем информацию о матчах
         for pro_match in data_pro_matches:
             for i in range(10):
-                pg_hook.insert_rows(
-                    table="player_matches",
-                    rows=[
-                        (
-                            pro_match["match_id"],
-                            pro_match["players"][i]["account_id"],
-                            i,
-                            pro_match["players"][i]["hero_id"],
-                            pro_match["players"][i]["item_0"],
-                            pro_match["players"][i]["item_1"],
-                            pro_match["players"][i]["item_2"],
-                            pro_match["players"][i]["item_3"],
-                            pro_match["players"][i]["item_4"],
-                            pro_match["players"][i]["item_5"],
-                            pro_match["players"][i]["kills"],
-                            pro_match["players"][i]["deaths"],
-                            pro_match["players"][i]["assists"],
-                            pro_match["players"][i]["leaver_status"],
-                            pro_match["players"][i]["gold"],
-                            pro_match["players"][i]["last_hits"],
-                            pro_match["players"][i]["denies"],
-                            pro_match["players"][i]["gold_per_min"],
-                            pro_match["players"][i]["xp_per_min"],
-                            pro_match["players"][i]["gold_spent"],
-                            pro_match["players"][i]["hero_damage"],
-                            pro_match["players"][i]["tower_damage"],
-                            pro_match["players"][i]["hero_healing"],
-                            pro_match["players"][i]["level"],
-                            pro_match["players"][i]["stuns"],
-                            pro_match["players"][i]["gold_t"],
-                            pro_match["players"][i]["lh_t"],
-                            pro_match["players"][i]["xp_t"],
-                            pro_match["players"][i]["creeps_stacked"],
-                            pro_match["players"][i]["camps_stacked"],
-                            pro_match["players"][i]["lane"],
-                            pro_match["players"][i]["is_roaming"],
-                            pro_match["players"][i]["roshans_killed"],
-                            pro_match["players"][i]["observers_placed"],
-                            pro_match["players"][i]["dn_t"],
-                            pro_match["players"][i]["item_neutral"],
-                            pro_match["players"][i]["net_worth"],
-                        )
-                    ],
-                    target_fields=[
-                        "match_id",
-                        "account_id",
-                        "player_slot",
-                        "hero_id",
-                        "item_0",
-                        "item_1",
-                        "item_2",
-                        "item_3",
-                        "item_4",
-                        "item_5",
-                        "kills",
-                        "deaths",
-                        "assists",
-                        "leaver_status",
-                        "gold",
-                        "last_hits",
-                        "denies",
-                        "gold_per_min",
-                        "xp_per_min",
-                        "gold_spent",
-                        "hero_damage",
-                        "tower_damage",
-                        "hero_healing",
-                        "level",
-                        "stuns",
-                        "gold_t",
-                        "lh_t",
-                        "xp_t",
-                        "creeps_stacked",
-                        "camps_stacked",
-                        "lane",
-                        "is_roaming",
-                        "roshans_killed",
-                        "observers_placed",
-                        "dn_t",
-                        "item_neutral",
-                        "net_worth",
-                    ],
-                )
+                try:
+                    pg_hook.insert_rows(
+                        table="player_matches",
+                        rows=[
+                            (
+                                pro_match["match_id"],
+                                pro_match["players"][i]["account_id"],
+                                i,
+                                pro_match["players"][i]["hero_id"],
+                                pro_match["players"][i]["item_0"],
+                                pro_match["players"][i]["item_1"],
+                                pro_match["players"][i]["item_2"],
+                                pro_match["players"][i]["item_3"],
+                                pro_match["players"][i]["item_4"],
+                                pro_match["players"][i]["item_5"],
+                                pro_match["players"][i]["kills"],
+                                pro_match["players"][i]["deaths"],
+                                pro_match["players"][i]["assists"],
+                                pro_match["players"][i]["leaver_status"],
+                                pro_match["players"][i]["gold"],
+                                pro_match["players"][i]["last_hits"],
+                                pro_match["players"][i]["denies"],
+                                pro_match["players"][i]["gold_per_min"],
+                                pro_match["players"][i]["xp_per_min"],
+                                pro_match["players"][i]["gold_spent"],
+                                pro_match["players"][i]["hero_damage"],
+                                pro_match["players"][i]["tower_damage"],
+                                pro_match["players"][i]["hero_healing"],
+                                pro_match["players"][i]["level"],
+                                pro_match["players"][i]["stuns"],
+                                pro_match["players"][i]["gold_t"],
+                                pro_match["players"][i]["lh_t"],
+                                pro_match["players"][i]["xp_t"],
+                                pro_match["players"][i]["creeps_stacked"],
+                                pro_match["players"][i]["camps_stacked"],
+                                pro_match["players"][i]["lane"],
+                                pro_match["players"][i]["is_roaming"],
+                                pro_match["players"][i]["roshans_killed"],
+                                pro_match["players"][i]["observers_placed"],
+                                pro_match["players"][i]["dn_t"],
+                                pro_match["players"][i]["item_neutral"],
+                                pro_match["players"][i]["net_worth"],
+                            )
+                        ],
+                        target_fields=[
+                            "match_id",
+                            "account_id",
+                            "player_slot",
+                            "hero_id",
+                            "item_0",
+                            "item_1",
+                            "item_2",
+                            "item_3",
+                            "item_4",
+                            "item_5",
+                            "kills",
+                            "deaths",
+                            "assists",
+                            "leaver_status",
+                            "gold",
+                            "last_hits",
+                            "denies",
+                            "gold_per_min",
+                            "xp_per_min",
+                            "gold_spent",
+                            "hero_damage",
+                            "tower_damage",
+                            "hero_healing",
+                            "level",
+                            "stuns",
+                            "gold_t",
+                            "lh_t",
+                            "xp_t",
+                            "creeps_stacked",
+                            "camps_stacked",
+                            "lane",
+                            "is_roaming",
+                            "roshans_killed",
+                            "observers_placed",
+                            "dn_t",
+                            "item_neutral",
+                            "net_worth",
+                        ],
+                    )
+                except Exception as e:
+                    print(e)
                 print(
                     f"ИНФОРМАЦИЯ О ИГРОКЕ СЛОТ №{i} В МАТЧЕ {pro_match["match_id"]} ЗАПИСАНА!"
                 )
 
-    list_last_50 >> download_pro_matches_data() >> [upload_pro_teams(), upload_pro_matches()] >> upload_player_matches()
+    del_upload_match_id = SQLExecuteQueryOperator(
+        task_id="del_upload_match_id",
+        conn_id="postgres",
+        autocommit=True,
+        database="postgres",
+        # решил, что зачем получать список на удаление через xcom, если вложенный запрос получит тот же список
+        sql="""DELETE FROM temp_promatches_download_queue
+        WHERE match_id IN (SELECT match_id from temp_promatches_download_queue
+        order by match_id desc
+        limit 50);
+        """,
+        show_return_value_in_logs=True,
+    )
+    download_pro_matches_data = download_pro_matches_data()
+    u_pro_teams = upload_pro_teams()
+    u_pro_matches = upload_pro_matches()
+    u_player_matches = upload_player_matches()
+
+    list_last_50 >> download_pro_matches_data
+    download_pro_matches_data >> [u_pro_teams, u_pro_matches]
+    u_pro_matches >> u_player_matches >> del_upload_match_id
 
 
 dag_download_upload_pro_matches()
