@@ -7,10 +7,12 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
+LIMIT_MATCH_ID = 50  # Установить длину списка match_id  для загрузки
+
 
 @dag(
     # schedule="@once",
-    schedule_interval=timedelta(minutes=30),
+    schedule_interval=timedelta(minutes=10),
     start_date=pendulum.datetime(2024, 5, 10, tz="UTC"),
     catchup=False,
     tags=["upload"],
@@ -26,11 +28,11 @@ def dag_download_upload_pro_matches():
         conn_id="postgres",
         autocommit=True,
         database="postgres",
-        sql="""SELECT match_id from temp_promatches_download_queue
+        sql=f"""SELECT match_id from temp_promatches_download_queue
         order by match_id desc
-        limit 50
+        limit {LIMIT_MATCH_ID}
         """,
-        show_return_value_in_logs=True,
+        show_return_value_in_logs=False,
         do_xcom_push=True,
     )
 
@@ -288,10 +290,10 @@ def dag_download_upload_pro_matches():
         autocommit=True,
         database="postgres",
         # решил, что зачем получать список на удаление через xcom, если вложенный запрос получит тот же список
-        sql="""DELETE FROM temp_promatches_download_queue
+        sql=f"""DELETE FROM temp_promatches_download_queue
         WHERE match_id IN (SELECT match_id from temp_promatches_download_queue
         order by match_id desc
-        limit 50);
+        limit {LIMIT_MATCH_ID});
         """,
         show_return_value_in_logs=True,
     )
